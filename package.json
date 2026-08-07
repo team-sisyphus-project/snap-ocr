@@ -1,0 +1,25 @@
+{
+  "name": "snapocr",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p ${PORT:-3000}",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3000}",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.115.0",
+    "next": "15.5.23",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}
