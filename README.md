@@ -53,11 +53,20 @@ npm test           # Vitest — all external APIs are mocked, no key required
 npm run build
 npm start          # honors the PORT environment variable
 npm run check:korean   # fails if any Korean (Hangul) remains in UI Display Strings
+npm run check:locale   # fails if a UI formatting call omits an explicit locale
 ```
 
 `npm run check:korean` statically scans the UI code paths (`app/`, `components/`, `lib/`),
 strips comments, and reports any remaining Hangul. The UI is English only, so a hit means
 a hardcoded string needs to move into `lib/strings.ts` in English.
+
+`npm run check:locale` scans the same UI paths for date/number formatting calls
+(`Intl.*Format(...)` and `.toLocale*(...)`) that omit an explicit locale — a missing
+argument, or one passed as `undefined`/`null`. Such calls fall back to the host's
+default locale, so output silently varies by server or browser. The UI is pinned to
+**`en-US`**: format dates and numbers through the helpers in `lib/format.ts` (which
+pass the `en-US` locale for you), or pass an explicit locale like `"en-US"` at the call
+site. A hit means a formatting call needs its locale made explicit.
 
 ## Structure
 
