@@ -9,8 +9,11 @@
  *   every screen that reads it updates. Do NOT localize user-generated data
  *   (uploaded images, OCR output, free text the user typed) — that is the
  *   user's language, not the UI's.
- * Depends on: nothing (pure constants + string builders; no runtime deps).
+ * Depends on: lib/format.ts for en-US number formatting of any numeric value
+ *   injected into a Display String (counts, sizes). No other runtime deps.
  */
+
+import { formatNumber } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // English UI voice/tone (see design-spec recording):
@@ -65,7 +68,15 @@ export const FORMAT_SELECTOR = {
 export const DROPZONE = {
   instructions:
     "Drag and drop an image, paste it (Ctrl+V), or click to choose one.",
-  constraints: "PNG · JPEG · WebP · GIF, up to 5MB each, 10 images max.",
+  /**
+   * Upload limits line, e.g. "PNG · JPEG · WebP · GIF, up to 5MB each, 10
+   * images max." Counts/sizes are injected from the validation constants and
+   * rendered en-US via formatNumber, so nothing is hardcoded here and the
+   * numbers stay in sync with lib/validate.ts.
+   */
+  constraints: (maxImages: number, maxMegabytes: number): string =>
+    `PNG · JPEG · WebP · GIF, up to ${formatNumber(maxMegabytes)}MB each, ` +
+    `${formatNumber(maxImages)} images max.`,
   thumbTitle: "Click to enlarge",
   removeImage: "Remove",
   enlargedDialogLabel: "Enlarged image view",
@@ -128,12 +139,12 @@ export const MESSAGES = {
 export const VALIDATION = {
   noImages: "Please add at least one image.",
   badType: "Only PNG, JPEG, WebP, and GIF images are supported.",
-  /** e.g. "You can process up to 10 images." */
+  /** e.g. "You can process up to 10 images." (count formatted en-US). */
   tooManyImages: (max: number): string =>
-    `You can process up to ${max} images.`,
-  /** e.g. "Each image must be 5MB or smaller." */
+    `You can process up to ${formatNumber(max)} images.`,
+  /** e.g. "Each image must be 5MB or smaller." (size formatted en-US). */
   tooLarge: (maxMegabytes: number): string =>
-    `Each image must be ${maxMegabytes}MB or smaller.`,
+    `Each image must be ${formatNumber(maxMegabytes)}MB or smaller.`,
 } as const;
 
 /** Flat namespace for convenient single-import access to every string group. */

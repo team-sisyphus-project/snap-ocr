@@ -14,8 +14,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { validateImages, ALLOWED_MEDIA_TYPES } from "@/lib/validate";
+import {
+  validateImages,
+  ALLOWED_MEDIA_TYPES,
+  MAX_IMAGES,
+  MAX_IMAGE_BYTES,
+} from "@/lib/validate";
 import { DROPZONE } from "@/lib/strings";
+
+// Upload limits shown to the user, derived from the validation constants and
+// rendered en-US by DROPZONE.constraints (no hardcoded counts/sizes here).
+const MAX_IMAGE_MEGABYTES = MAX_IMAGE_BYTES / (1024 * 1024);
 
 export type SelectedImage = { id: string; file: File; previewUrl: string };
 
@@ -105,7 +114,7 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
         <p>
           {DROPZONE.instructions}
           <br />
-          <small>{DROPZONE.constraints}</small>
+          <small>{DROPZONE.constraints(MAX_IMAGES, MAX_IMAGE_MEGABYTES)}</small>
         </p>
         <input
           ref={fileInputRef}

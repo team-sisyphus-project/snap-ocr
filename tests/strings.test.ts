@@ -63,6 +63,24 @@ describe("strings catalog", () => {
     expect(VALIDATION.tooLarge(5)).toBe("Each image must be 5MB or smaller.");
   });
 
+  it("routes injected counts/sizes through en-US number formatting", () => {
+    // Small values are unchanged, so the human-readable wording is preserved.
+    expect(DROPZONE.constraints(10, 5)).toBe(
+      "PNG · JPEG · WebP · GIF, up to 5MB each, 10 images max.",
+    );
+    // Large values pick up en-US grouping — proof the number goes through
+    // formatNumber rather than a raw template-literal injection.
+    expect(DROPZONE.constraints(1000, 1500)).toBe(
+      "PNG · JPEG · WebP · GIF, up to 1,500MB each, 1,000 images max.",
+    );
+    expect(VALIDATION.tooManyImages(1000)).toBe(
+      "You can process up to 1,000 images.",
+    );
+    expect(VALIDATION.tooLarge(1024)).toBe(
+      "Each image must be 1,024MB or smaller.",
+    );
+  });
+
   it("covers every output-format label", () => {
     expect(FORMAT_SELECTOR.labels).toEqual({
       auto: "Auto",
