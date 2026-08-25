@@ -11,6 +11,7 @@ import {
 } from "@/lib/prompts";
 import { getProviderMeta, type ProviderId } from "@/lib/providers";
 import type { MediaType } from "@/lib/validate";
+import { MESSAGES } from "@/lib/strings";
 
 export class ProviderError extends Error {
   status: number;
@@ -28,9 +29,9 @@ export type EngineArgs = {
 };
 export type OcrEngine = (args: EngineArgs) => AsyncGenerator<string>;
 
-const MSG_NO_KEY = "API 키를 입력해 주세요.";
-const MSG_BAD_KEY = "API 키가 올바르지 않습니다. 키를 확인해 주세요.";
-const MSG_TRANSIENT = "일시적인 오류입니다. 다시 시도해 주세요.";
+const MSG_NO_KEY = MESSAGES.enterApiKey;
+const MSG_BAD_KEY = MESSAGES.invalidApiKey;
+const MSG_TRANSIENT = MESSAGES.temporaryError;
 
 // --- Anthropic ---
 
@@ -38,11 +39,10 @@ function mapAnthropicError(err: unknown): ProviderError {
   if (err instanceof Anthropic.APIError) {
     const status = (err as { status?: number }).status;
     if (status === 401 || status === 403) return new ProviderError(401, MSG_BAD_KEY);
-    if (status === 429)
-      return new ProviderError(429, "요청이 많습니다. 잠시 후 다시 시도해 주세요.");
+    if (status === 429) return new ProviderError(429, MESSAGES.rateLimited);
     return new ProviderError(503, MSG_TRANSIENT);
   }
-  return new ProviderError(500, "알 수 없는 오류가 발생했습니다.");
+  return new ProviderError(500, MESSAGES.unknownError);
 }
 
 async function* anthropicEngine({
@@ -87,9 +87,9 @@ async function* anthropicEngine({
     }
     const final = await stream.finalMessage();
     if (final.stop_reason === "refusal") {
-      yield "\n[이 이미지는 처리할 수 없습니다.]";
+      yield MESSAGES.imageNotProcessable;
     } else if (final.stop_reason === "max_tokens") {
-      yield "\n[출력 한도에 도달해 결과가 잘렸습니다.]";
+      yield MESSAGES.outputTruncated;
     }
   } catch (err) {
     throw mapAnthropicError(err);
@@ -100,10 +100,7 @@ async function* anthropicEngine({
 
 function mapGeminiError(status: number): ProviderError {
   if (status === 429) {
-    return new ProviderError(
-      429,
-      "무료 사용량 한도에 도달했습니다. 잠시 후 다시 시도하거나, 일일 한도인 경우 내일 다시 시도해 주세요.",
-    );
+    return new ProviderError(429, MESSAGES.freeQuotaExceeded);
   }
   if (status === 400 || status === 401 || status === 403) {
     return new ProviderError(401, MSG_BAD_KEY);

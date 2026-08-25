@@ -1,3 +1,5 @@
+import { VALIDATION } from "@/lib/strings";
+
 export const MAX_IMAGES = 10;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export const ALLOWED_MEDIA_TYPES = [
@@ -24,12 +26,12 @@ export function base64ByteLength(base64: string): number {
 
 export function validateImages(images: ImageMeta[]): ValidationError | null {
   if (images.length === 0) {
-    return { code: "no_images", message: "이미지를 1장 이상 추가해 주세요." };
+    return { code: "no_images", message: VALIDATION.noImages };
   }
   if (images.length > MAX_IMAGES) {
     return {
       code: "too_many_images",
-      message: `이미지는 최대 ${MAX_IMAGES}장까지 처리할 수 있습니다.`,
+      message: VALIDATION.tooManyImages(MAX_IMAGES),
     };
   }
   for (let i = 0; i < images.length; i++) {
@@ -38,14 +40,14 @@ export function validateImages(images: ImageMeta[]): ValidationError | null {
       return {
         code: "bad_type",
         index: i,
-        message: "PNG, JPEG, WebP, GIF 이미지만 지원합니다.",
+        message: VALIDATION.badType,
       };
     }
     if (img.sizeBytes > MAX_IMAGE_BYTES) {
       return {
         code: "too_large",
         index: i,
-        message: "이미지 한 장의 크기는 5MB 이하여야 합니다.",
+        message: VALIDATION.tooLarge(MAX_IMAGE_BYTES / (1024 * 1024)),
       };
     }
   }

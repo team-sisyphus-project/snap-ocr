@@ -102,21 +102,23 @@ describe("POST /api/ocr", () => {
   });
 
   it("maps a pre-stream ProviderError to its HTTP status", async () => {
-    engineMock.mockReturnValue(throwing(new ProviderError(429, "무료 사용량 한도에 도달했습니다.")));
+    engineMock.mockReturnValue(
+      throwing(new ProviderError(429, "You have reached the free usage limit.")),
+    );
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(429);
     const json = await res.json();
-    expect(json.error).toContain("무료 사용량 한도");
+    expect(json.error).toContain("free usage limit");
   });
 
-  it("appends a Korean notice on mid-stream failure", async () => {
+  it("appends an English notice on mid-stream failure", async () => {
     engineMock.mockReturnValue(
-      throwingAfter(["부분"], new ProviderError(503, "transient")),
+      throwingAfter(["partial"], new ProviderError(503, "transient")),
     );
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(200);
     const text = await res.text();
-    expect(text).toContain("부분");
-    expect(text).toContain("오류가 발생했습니다");
+    expect(text).toContain("partial");
+    expect(text).toContain("Something went wrong");
   });
 });

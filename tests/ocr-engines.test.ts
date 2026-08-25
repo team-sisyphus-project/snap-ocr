@@ -81,7 +81,7 @@ describe("anthropic engine", () => {
     const text = await collect(
       ENGINES.anthropic({ apiKey: "k", images: IMAGES, format: "auto" }),
     );
-    expect(text).toContain("처리할 수 없습니다");
+    expect(text).toContain("cannot be processed");
   });
 
   it("uses claude model and passes image blocks", async () => {
@@ -153,12 +153,12 @@ describe("gemini engine", () => {
     expect(body.systemInstruction.parts[0].text).toContain("OCR");
   });
 
-  it("maps 429 to the free-tier Korean message", async () => {
+  it("maps 429 to the free-tier limit message", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 429, body: null });
     const gen = ENGINES.gemini({ apiKey: "g", images: IMAGES, format: "auto" });
     await expect(gen.next()).rejects.toMatchObject({
       status: 429,
-      message: expect.stringContaining("무료 사용량 한도"),
+      message: expect.stringContaining("free usage limit"),
     });
   });
 
@@ -167,7 +167,7 @@ describe("gemini engine", () => {
     const gen = ENGINES.gemini({ apiKey: "g", images: IMAGES, format: "auto" });
     await expect(gen.next()).rejects.toMatchObject({
       status: 401,
-      message: expect.stringContaining("올바르지 않습니다"),
+      message: expect.stringContaining("invalid"),
     });
   });
 

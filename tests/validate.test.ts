@@ -35,9 +35,11 @@ describe("validateImages", () => {
     expect(err?.index).toBe(0);
   });
 
-  it("every error carries a Korean message", () => {
+  it("every error carries an English (Korean-free) message", () => {
     const err = validateImages([]);
     expect(err?.message).toBeTruthy();
+    expect(err?.message).toMatch(/at least one image/i);
+    expect(err?.message ?? "").not.toMatch(/[가-힣]/);
   });
 });
 
