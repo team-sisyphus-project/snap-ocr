@@ -1,13 +1,29 @@
+/**
+ * Template Header
+ * Purpose: OCR API route. Validates the request (provider, format, images),
+ *   dispatches to the matching server engine, and streams the extracted text
+ *   back as text/plain. Pre-stream failures become JSON error responses; a
+ *   mid-stream failure appends a notice to the body.
+ * Feature Unit: OCR Extraction
+ * Customize: The request/response contract lives here; provider engines and
+ *   their error→status mapping live in lib/ocr-engines.ts, and all user-facing
+ *   messages come from the MESSAGES group in lib/strings.ts. maxDuration bounds
+ *   how long a stream may run.
+ * Depends on: the ocr-engines, prompts, providers, validate, and strings
+ *   modules; the Node.js runtime.
+ * SECURITY: request bodies carry user API keys — never log the body or the key.
+ */
+
 import { isOutputFormat } from "@/lib/prompts";
 import { isProviderId } from "@/lib/providers";
 import { ENGINES, ProviderError, type OcrImage } from "@/lib/ocr-engines";
 import { validateImages, base64ByteLength } from "@/lib/validate";
+import { MESSAGES } from "@/lib/strings";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-// SECURITY: request bodies carry user API keys — never log the body or the key.
-
+/** Build a JSON error response with the given status and message. */
 function jsonError(status: number, message: string): Response {
   return new Response(JSON.stringify({ error: message }), {
     status,
@@ -15,6 +31,7 @@ function jsonError(status: number, message: string): Response {
   });
 }
 
+/** POST /api/ocr — validate input, dispatch to the engine, and stream the extracted text. */
 export async function POST(req: Request): Promise<Response> {
   let body: {
     images?: OcrImage[];
@@ -25,17 +42,17 @@ export async function POST(req: Request): Promise<Response> {
   try {
     body = await req.json();
   } catch {
-    return jsonError(400, "잘못된 요청입니다.");
+    return jsonError(400, MESSAGES.invalidRequest);
   }
 
   const provider = body.provider;
   if (!isProviderId(provider)) {
-    return jsonError(400, "지원하지 않는 공급자입니다.");
+    return jsonError(400, MESSAGES.unsupportedProvider);
   }
 
   const format = body.format;
   if (!isOutputFormat(format)) {
-    return jsonError(400, "지원하지 않는 출력 포맷입니다.");
+    return jsonError(400, MESSAGES.unsupportedFormat);
   }
 
   const images = Array.isArray(body.images) ? body.images : [];
@@ -57,7 +74,7 @@ export async function POST(req: Request): Promise<Response> {
   const engine = ENGINES[provider];
   const gen = engine({ apiKey, images, format });
 
-  // 첫 청크 전 실패(인증·한도·요청 오류)는 HTTP 상태 코드로 매핑한다.
+  // Failures before the first chunk (auth, quota, request errors) map to HTTP status codes.
   let first: IteratorResult<string>;
   try {
     first = await gen.next();
@@ -80,14 +97,12 @@ export async function POST(req: Request): Promise<Response> {
           }
         }
       } catch (err) {
-        // 스트림 도중 실패 — 상태 코드는 이미 200이므로 본문에 안내를 덧붙인다.
+        // Mid-stream failure — the status is already 200, so append a notice to the body.
         console.error(
           "[/api/ocr] stream error:",
           err instanceof Error ? err.message : "unknown",
         );
-        controller.enqueue(
-          encoder.encode("\n[오류가 발생했습니다. 다시 시도해 주세요.]"),
-        );
+        controller.enqueue(encoder.encode(MESSAGES.streamInterrupted));
       }
       controller.close();
     },
@@ -102,6 +117,7 @@ export async function POST(req: Request): Promise<Response> {
   });
 }
 
+/** Map a pre-stream engine failure to a JSON error response (known status, or 500). */
 function mapEngineError(err: unknown): Response {
   if (err instanceof ProviderError) {
     return jsonError(err.status, err.message);
@@ -110,5 +126,5 @@ function mapEngineError(err: unknown): Response {
     "[/api/ocr] error:",
     err instanceof Error ? err.message : "unknown",
   );
-  return jsonError(500, "알 수 없는 오류가 발생했습니다.");
+  return jsonError(500, MESSAGES.unknownError);
 }

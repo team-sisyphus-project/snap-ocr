@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check": "npm run check:korean && npm run check:locale",
+    "check:korean": "node scripts/check-korean-residue.mjs",
+    "check:locale": "node scripts/check-locale-format.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.115.0",

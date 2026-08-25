@@ -1,14 +1,28 @@
+/**
+ * Template Header
+ * Purpose: Next.js root layout — the HTML shell that wraps every page and sets
+ *   the document language and metadata (title/description) from the string
+ *   catalog.
+ * Feature Unit: Shared
+ * Customize: Global styles come from ./globals.css; the title/description text
+ *   comes from the APP group in lib/strings.ts. Change the lang attribute to
+ *   re-target the document language.
+ * Depends on: ./globals.css and the APP Display String group in lib/strings.ts.
+ */
+
 import type { Metadata } from "next";
 import "./globals.css";
+import { APP } from "@/lib/strings";
 
 export const metadata: Metadata = {
-  title: "SnapOCR — 스샷 텍스트 추출",
-  description: "스크린샷 이미지에서 텍스트를 추출하고 깔끔하게 정리합니다.",
+  title: APP.metaTitle,
+  description: APP.metaDescription,
 };
 
+/** Root layout: renders the HTML document shell around every page. */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

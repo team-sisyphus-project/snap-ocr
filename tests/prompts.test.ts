@@ -1,3 +1,12 @@
+/**
+ * Template Header
+ * Purpose: Unit tests for the prompt builder. Assert isOutputFormat guards the
+ *   OUTPUT_FORMATS set and buildSystemPrompt returns a non-empty prompt for
+ *   every declared format.
+ * Feature Unit: OCR Extraction
+ * Depends on: Vitest; the exports of @/lib/prompts.
+ */
+
 import { describe, it, expect } from "vitest";
 import {
   buildSystemPrompt,

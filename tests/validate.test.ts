@@ -1,3 +1,12 @@
+/**
+ * Template Header
+ * Purpose: Unit tests for image-upload validation. Assert validateImages
+ *   enforces the count and per-image byte limits and base64ByteLength measures
+ *   payload sizes correctly.
+ * Feature Unit: Upload
+ * Depends on: Vitest; the exports of @/lib/validate.
+ */
+
 import { describe, it, expect } from "vitest";
 import {
   validateImages,
@@ -35,9 +44,11 @@ describe("validateImages", () => {
     expect(err?.index).toBe(0);
   });
 
-  it("every error carries a Korean message", () => {
+  it("every error carries an English (Korean-free) message", () => {
     const err = validateImages([]);
     expect(err?.message).toBeTruthy();
+    expect(err?.message).toMatch(/at least one image/i);
+    expect(err?.message ?? "").not.toMatch(/[가-힣]/);
   });
 });
 

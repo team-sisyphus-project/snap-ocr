@@ -1,7 +1,30 @@
+/**
+ * Template Header
+ * Purpose: Image intake surface. Accepts images via drag-and-drop, clipboard
+ *   paste (Ctrl/Cmd+V), or file picker; validates them; renders thumbnails with
+ *   remove buttons; and offers an enlarged lightbox view.
+ * Feature Unit: Upload
+ * Customize: Accepted types and limits come from lib/validate.ts; all wording
+ *   (instructions, constraints, alt/aria labels) comes from the DROPZONE group
+ *   in lib/strings.ts.
+ * Depends on: the browser File / Clipboard / URL.createObjectURL APIs; the
+ *   validate and strings modules.
+ */
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { validateImages, ALLOWED_MEDIA_TYPES } from "@/lib/validate";
+import {
+  validateImages,
+  ALLOWED_MEDIA_TYPES,
+  MAX_IMAGES,
+  MAX_IMAGE_BYTES,
+} from "@/lib/validate";
+import { DROPZONE } from "@/lib/strings";
+
+// Upload limits shown to the user, derived from the validation constants and
+// rendered en-US by DROPZONE.constraints (no hardcoded counts/sizes here).
+const MAX_IMAGE_MEGABYTES = MAX_IMAGE_BYTES / (1024 * 1024);
 
 export type SelectedImage = { id: string; file: File; previewUrl: string };
 
@@ -11,11 +34,12 @@ type Props = {
   onError: (message: string | null) => void;
 };
 
+/** Image intake: drag-drop / paste / picker, with validation, thumbnails, and lightbox. */
 export default function ImageDropzone({ images, onImagesChange, onError }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [enlarged, setEnlarged] = useState<SelectedImage | null>(null);
 
-  // 확대 보기 열림 중 ESC로 닫기
+  // Close the enlarged view with the Escape key while it is open.
   useEffect(() => {
     if (!enlarged) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -25,6 +49,7 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [enlarged]);
 
+  // Handler: append picked files, validate the combined set, and revert on error.
   const addFiles = useCallback(
     (files: File[]) => {
       const next = [
@@ -49,7 +74,7 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
     [images, onImagesChange, onError],
   );
 
-  // 클립보드 붙여넣기 (Ctrl/Cmd+V)
+  // Clipboard paste (Ctrl/Cmd+V).
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
       const files = Array.from(e.clipboardData?.files ?? []).filter((f) =>
@@ -64,6 +89,7 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
     return () => window.removeEventListener("paste", onPaste);
   }, [addFiles]);
 
+  // Handler: remove one image by id and release its object URL.
   const removeImage = (id: string) => {
     const target = images.find((i) => i.id === id);
     if (target) URL.revokeObjectURL(target.previewUrl);
@@ -86,9 +112,9 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
         tabIndex={0}
       >
         <p>
-          이미지를 끌어다 놓거나, 붙여넣기(Ctrl+V)하거나, 클릭해서 선택하세요.
+          {DROPZONE.instructions}
           <br />
-          <small>PNG · JPEG · WebP · GIF, 장당 5MB, 최대 10장</small>
+          <small>{DROPZONE.constraints(MAX_IMAGES, MAX_IMAGE_MEGABYTES)}</small>
         </p>
         <input
           ref={fileInputRef}
@@ -107,15 +133,15 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
         <ul className="thumbs">
           {images.map((img, idx) => (
             <li key={img.id}>
-              {/* 로컬 blob 프리뷰이므로 next/image 대신 img 사용 */}
+              {/* Local blob preview, so use a plain img instead of next/image. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={img.previewUrl}
-                alt={`이미지 ${idx + 1} — 클릭하면 크게 보기`}
-                title="클릭하면 크게 보기"
+                alt={DROPZONE.thumbAlt(idx + 1)}
+                title={DROPZONE.thumbTitle}
                 onClick={() => setEnlarged(img)}
               />
-              <button type="button" onClick={() => removeImage(img.id)} aria-label="삭제">
+              <button type="button" onClick={() => removeImage(img.id)} aria-label={DROPZONE.removeImage}>
                 ✕
               </button>
             </li>
@@ -128,19 +154,19 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
           className="lightbox"
           role="dialog"
           aria-modal="true"
-          aria-label="이미지 크게 보기"
+          aria-label={DROPZONE.enlargedDialogLabel}
           onClick={() => setEnlarged(null)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={enlarged.previewUrl}
-            alt="확대된 이미지"
+            alt={DROPZONE.enlargedAlt}
             onClick={(e) => e.stopPropagation()}
           />
           <button
             type="button"
             className="lightbox-close"
-            aria-label="닫기"
+            aria-label={DROPZONE.close}
             onClick={() => setEnlarged(null)}
           >
             ✕

@@ -1,3 +1,12 @@
+/**
+ * Template Header
+ * Purpose: Unit tests for the provider registry. Assert PROVIDER_METAS has
+ *   unique ids, isProviderId/getProviderMeta resolve known ids, and
+ *   DEFAULT_PROVIDER is a valid registered provider.
+ * Feature Unit: Shared
+ * Depends on: Vitest; the exports of @/lib/providers.
+ */
+
 import { describe, it, expect } from "vitest";
 import {
   PROVIDER_METAS,

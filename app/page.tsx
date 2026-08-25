@@ -1,3 +1,16 @@
+/**
+ * Template Header
+ * Purpose: Main screen. Composes the provider/key panel, image dropzone, format
+ *   selector, and result panel, then runs an extraction by POSTing the images to
+ *   /api/ocr and streaming the response into the result view.
+ * Feature Unit: OCR Extraction
+ * Customize: Layout and the composition of the child panels live here; all
+ *   visible wording comes from the APP/HOME/MESSAGES groups in lib/strings.ts,
+ *   and the request goes to the /api/ocr endpoint.
+ * Depends on: the /api/ocr route, the component modules under components/, and
+ *   the providers and strings modules.
+ */
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,7 +24,9 @@ import {
   getProviderMeta,
   type ProviderId,
 } from "@/lib/providers";
+import { APP, HOME, MESSAGES } from "@/lib/strings";
 
+/** Read a File and resolve its base64 payload (without the data-URL prefix). */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -24,6 +39,7 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+/** Home page: orchestrates upload → extract → stream result across the panels. */
 export default function Home() {
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [format, setFormat] = useState<OutputFormat>("auto");
@@ -33,18 +49,19 @@ export default function Home() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 최초 진입 시 기본 공급자의 저장된 키 복원
+  // On first load, restore the saved key for the default provider.
   useEffect(() => {
     setApiKey(
       localStorage.getItem(getProviderMeta(DEFAULT_PROVIDER).storageKey) ?? "",
     );
   }, []);
 
+  // Handler: validate the key, POST the images to /api/ocr, and stream the reply.
   const run = async () => {
     setError(null);
 
     if (getProviderMeta(provider).requiresUiKey && !apiKey.trim()) {
-      setError("API 키를 입력해 주세요.");
+      setError(MESSAGES.enterApiKey);
       return;
     }
 
@@ -69,7 +86,7 @@ export default function Home() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        throw new Error(json?.error ?? "요청에 실패했습니다. 다시 시도해 주세요.");
+        throw new Error(json?.error ?? MESSAGES.requestFailed);
       }
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
@@ -79,7 +96,7 @@ export default function Home() {
         setResult((prev) => prev + decoder.decode(value, { stream: true }));
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "오류가 발생했습니다.");
+      setError(e instanceof Error ? e.message : MESSAGES.generic);
     } finally {
       setIsStreaming(false);
     }
@@ -87,8 +104,8 @@ export default function Home() {
 
   return (
     <main>
-      <h1>SnapOCR</h1>
-      <p>스크린샷 속 텍스트를 추출하고 깔끔하게 정리합니다.</p>
+      <h1>{APP.name}</h1>
+      <p>{APP.tagline}</p>
 
       <ApiKeyPanel
         provider={provider}
@@ -105,7 +122,7 @@ export default function Home() {
         onClick={run}
         disabled={images.length === 0 || isStreaming}
       >
-        {isStreaming ? "추출 중…" : "텍스트 추출"}
+        {isStreaming ? HOME.extracting : HOME.extract}
       </button>
 
       {error && <p className="error-message" role="alert">{error}</p>}

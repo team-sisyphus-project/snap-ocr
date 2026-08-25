@@ -1,7 +1,18 @@
-// Server-only OCR engines, one per provider (see lib/providers.ts registry).
-// Each engine is an async generator yielding text chunks; failures before the
-// first chunk throw ProviderError so the route can map them to HTTP statuses.
-// SECURITY: API keys are used per-request only — never stored, never logged.
+/**
+ * Template Header
+ * Purpose: Server-only OCR engines, one per provider (see the lib/providers.ts
+ *   registry). Each engine streams the extracted, cleaned-up text as chunks;
+ *   failures before the first chunk throw ProviderError so the route can map
+ *   them to HTTP status codes.
+ * Feature Unit: OCR Extraction
+ * Customize: Add a provider engine to the ENGINES map (keyed by provider id),
+ *   or change model parameters (e.g. max_tokens) and the request shape per
+ *   provider. Error → HTTP status mapping lives in the map*Error helpers.
+ * Depends on: the @anthropic-ai/sdk package and the Gemini REST/SSE endpoint;
+ *   the ANTHROPIC_API_KEY env var (server fallback for Claude); the prompts,
+ *   providers, validate, and strings modules.
+ * SECURITY: API keys are used per-request only — never stored, never logged.
+ */
 
 import Anthropic from "@anthropic-ai/sdk";
 import {
@@ -11,7 +22,9 @@ import {
 } from "@/lib/prompts";
 import { getProviderMeta, type ProviderId } from "@/lib/providers";
 import type { MediaType } from "@/lib/validate";
+import { MESSAGES } from "@/lib/strings";
 
+/** Error carrying the HTTP status the route should return for a provider failure. */
 export class ProviderError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -28,23 +41,24 @@ export type EngineArgs = {
 };
 export type OcrEngine = (args: EngineArgs) => AsyncGenerator<string>;
 
-const MSG_NO_KEY = "API 키를 입력해 주세요.";
-const MSG_BAD_KEY = "API 키가 올바르지 않습니다. 키를 확인해 주세요.";
-const MSG_TRANSIENT = "일시적인 오류입니다. 다시 시도해 주세요.";
+const MSG_NO_KEY = MESSAGES.enterApiKey;
+const MSG_BAD_KEY = MESSAGES.invalidApiKey;
+const MSG_TRANSIENT = MESSAGES.temporaryError;
 
 // --- Anthropic ---
 
+/** Map an Anthropic SDK error to a ProviderError with the right HTTP status + message. */
 function mapAnthropicError(err: unknown): ProviderError {
   if (err instanceof Anthropic.APIError) {
     const status = (err as { status?: number }).status;
     if (status === 401 || status === 403) return new ProviderError(401, MSG_BAD_KEY);
-    if (status === 429)
-      return new ProviderError(429, "요청이 많습니다. 잠시 후 다시 시도해 주세요.");
+    if (status === 429) return new ProviderError(429, MESSAGES.rateLimited);
     return new ProviderError(503, MSG_TRANSIENT);
   }
-  return new ProviderError(500, "알 수 없는 오류가 발생했습니다.");
+  return new ProviderError(500, MESSAGES.unknownError);
 }
 
+/** Stream OCR text from Claude for the given images and format (Anthropic SDK). */
 async function* anthropicEngine({
   apiKey,
   images,
@@ -87,9 +101,9 @@ async function* anthropicEngine({
     }
     const final = await stream.finalMessage();
     if (final.stop_reason === "refusal") {
-      yield "\n[이 이미지는 처리할 수 없습니다.]";
+      yield MESSAGES.imageNotProcessable;
     } else if (final.stop_reason === "max_tokens") {
-      yield "\n[출력 한도에 도달해 결과가 잘렸습니다.]";
+      yield MESSAGES.outputTruncated;
     }
   } catch (err) {
     throw mapAnthropicError(err);
@@ -98,12 +112,10 @@ async function* anthropicEngine({
 
 // --- Gemini (REST, SSE) ---
 
+/** Map a Gemini HTTP status to a ProviderError with the right status + message. */
 function mapGeminiError(status: number): ProviderError {
   if (status === 429) {
-    return new ProviderError(
-      429,
-      "무료 사용량 한도에 도달했습니다. 잠시 후 다시 시도하거나, 일일 한도인 경우 내일 다시 시도해 주세요.",
-    );
+    return new ProviderError(429, MESSAGES.freeQuotaExceeded);
   }
   if (status === 400 || status === 401 || status === 403) {
     return new ProviderError(401, MSG_BAD_KEY);
@@ -111,6 +123,7 @@ function mapGeminiError(status: number): ProviderError {
   return new ProviderError(503, MSG_TRANSIENT);
 }
 
+/** Stream OCR text from Gemini for the given images and format (REST + SSE). */
 async function* geminiEngine({
   apiKey,
   images,
@@ -177,6 +190,7 @@ async function* geminiEngine({
   }
 }
 
+/** Provider id → engine lookup used by the API route to dispatch a request. */
 export const ENGINES: Record<ProviderId, OcrEngine> = {
   anthropic: anthropicEngine,
   gemini: geminiEngine,

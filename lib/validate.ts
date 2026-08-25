@@ -1,3 +1,17 @@
+/**
+ * Template Header
+ * Purpose: Image upload validation shared by the client and the API route
+ *   (double defense): enforce image count, per-image byte size, and allowed
+ *   media types, returning a ready-to-show error message or null.
+ * Feature Unit: Upload
+ * Customize: Change MAX_IMAGES, MAX_IMAGE_BYTES, or ALLOWED_MEDIA_TYPES to adjust
+ *   upload limits. The user-facing wording lives in the VALIDATION string group
+ *   (lib/strings.ts); the numbers are injected so the two stay in sync.
+ * Depends on: the VALIDATION Display String group in lib/strings.ts.
+ */
+
+import { VALIDATION } from "@/lib/strings";
+
 export const MAX_IMAGES = 10;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export const ALLOWED_MEDIA_TYPES = [
@@ -16,20 +30,22 @@ export type ValidationError = {
   message: string;
 };
 
+/** Compute the decoded byte length of a base64 string without decoding it. */
 export function base64ByteLength(base64: string): number {
   if (base64.length === 0) return 0;
   const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
   return (base64.length * 3) / 4 - padding;
 }
 
+/** Validate image count, size, and media type; return the first error or null if all pass. */
 export function validateImages(images: ImageMeta[]): ValidationError | null {
   if (images.length === 0) {
-    return { code: "no_images", message: "이미지를 1장 이상 추가해 주세요." };
+    return { code: "no_images", message: VALIDATION.noImages };
   }
   if (images.length > MAX_IMAGES) {
     return {
       code: "too_many_images",
-      message: `이미지는 최대 ${MAX_IMAGES}장까지 처리할 수 있습니다.`,
+      message: VALIDATION.tooManyImages(MAX_IMAGES),
     };
   }
   for (let i = 0; i < images.length; i++) {
@@ -38,14 +54,14 @@ export function validateImages(images: ImageMeta[]): ValidationError | null {
       return {
         code: "bad_type",
         index: i,
-        message: "PNG, JPEG, WebP, GIF 이미지만 지원합니다.",
+        message: VALIDATION.badType,
       };
     }
     if (img.sizeBytes > MAX_IMAGE_BYTES) {
       return {
         code: "too_large",
         index: i,
-        message: "이미지 한 장의 크기는 5MB 이하여야 합니다.",
+        message: VALIDATION.tooLarge(MAX_IMAGE_BYTES / (1024 * 1024)),
       };
     }
   }
