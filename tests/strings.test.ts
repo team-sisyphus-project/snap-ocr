@@ -1,3 +1,12 @@
+/**
+ * Template Header
+ * Purpose: Unit tests for the display-string catalog. Assert the catalog
+ *   exposes the expected panels and contains no Hangul, proving the UI copy is
+ *   English-only.
+ * Feature Unit: Shared
+ * Depends on: Vitest; the exports of @/lib/strings.
+ */
+
 import { describe, expect, it } from "vitest";
 import {
   API_KEY_PANEL,

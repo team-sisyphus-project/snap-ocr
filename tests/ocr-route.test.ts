@@ -1,3 +1,12 @@
+/**
+ * Template Header
+ * Purpose: Unit tests for the OCR API route with the engine layer mocked.
+ *   Assert POST validates requests, dispatches to the selected engine, and
+ *   converts provider errors into HTTP responses.
+ * Feature Unit: OCR Extraction
+ * Depends on: Vitest; @/app/api/ocr/route; a mocked @/lib/ocr-engines.
+ */
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // 엔진 계층 mock — 라우트는 디스패치·검증·에러 변환만 책임진다

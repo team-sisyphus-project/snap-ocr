@@ -1,3 +1,12 @@
+/**
+ * Template Header
+ * Purpose: Unit tests for the en-US formatting helpers. Assert LOCALE stays
+ *   pinned to en-US and formatNumber/formatDate/formatDateTime/fileTimestamp
+ *   render en-US output.
+ * Feature Unit: Shared
+ * Depends on: Vitest; the exports of @/lib/format.
+ */
+
 import { describe, expect, it } from "vitest";
 import {
   LOCALE,

@@ -1,3 +1,12 @@
+/**
+ * Template Header
+ * Purpose: Unit tests for the OCR engine layer against a mocked Anthropic SDK.
+ *   Assert engines stream extracted text and map provider failures to
+ *   ProviderError.
+ * Feature Unit: OCR Extraction
+ * Depends on: Vitest; @/lib/ocr-engines; a mocked @anthropic-ai/sdk.
+ */
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // --- Anthropic SDK mock ---
