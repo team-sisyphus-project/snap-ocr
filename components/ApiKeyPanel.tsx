@@ -1,6 +1,7 @@
 "use client";
 
 import { PROVIDER_METAS, getProviderMeta, type ProviderId } from "@/lib/providers";
+import { API_KEY_PANEL } from "@/lib/strings";
 
 type Props = {
   provider: ProviderId;
@@ -38,7 +39,7 @@ export default function ApiKeyPanel({
 
   return (
     <fieldset className="key-panel">
-      <legend>AI 공급자 · API 키</legend>
+      <legend>{API_KEY_PANEL.legend}</legend>
 
       <div className="provider-row">
         {PROVIDER_METAS.map((m) => (
@@ -61,20 +62,17 @@ export default function ApiKeyPanel({
           value={apiKey}
           placeholder={meta.keyPlaceholder}
           autoComplete="off"
-          aria-label={`${meta.label} API 키`}
+          aria-label={API_KEY_PANEL.keyInputLabel(meta.label)}
           onChange={(e) => handleKeyChange(e.target.value)}
         />
         <button type="button" onClick={clearKey} disabled={!apiKey}>
-          키 삭제
+          {API_KEY_PANEL.remove}
         </button>
       </div>
 
       <p className="key-notice">
-        키는 이 브라우저(localStorage)에만 저장되며 서버에 저장되지 않습니다. 추출
-        요청 시에만 서버로 전달돼 사용됩니다. “키 삭제” 버튼으로 언제든 지울 수
-        있습니다.
-        {!meta.requiresUiKey &&
-          " 비워두면 서버에 설정된 키가 있는 경우 그 키를 사용합니다."}
+        {API_KEY_PANEL.notice}
+        {!meta.requiresUiKey && API_KEY_PANEL.noticeServerFallback}
       </p>
     </fieldset>
   );

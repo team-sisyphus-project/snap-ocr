@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { OutputFormat } from "@/lib/prompts";
 import type { SelectedImage } from "@/components/ImageDropzone";
+import { RESULT_PANEL } from "@/lib/strings";
+import { fileTimestamp } from "@/lib/format";
 
 const EXTENSIONS: Record<OutputFormat, string> = {
   auto: "txt",
@@ -10,15 +12,6 @@ const EXTENSIONS: Record<OutputFormat, string> = {
   markdown: "md",
   csv: "csv",
 };
-
-function timestamp(): string {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}` +
-    `-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
-  );
-}
 
 type Props = {
   text: string;
@@ -44,7 +37,7 @@ export default function ResultPanel({ text, format, isStreaming, images }: Props
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `snapocr-result-${timestamp()}.${EXTENSIONS[format]}`;
+    a.download = `snapocr-result-${fileTimestamp(new Date())}.${EXTENSIONS[format]}`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -54,20 +47,20 @@ export default function ResultPanel({ text, format, isStreaming, images }: Props
   return (
     <section className="result-panel">
       <div className="result-toolbar">
-        <strong>추출 결과 {isStreaming && "(생성 중…)"}</strong>
+        <strong>{RESULT_PANEL.heading} {isStreaming && RESULT_PANEL.streaming}</strong>
         <span>
           <button
             type="button"
             onClick={() => setCompare((v) => !v)}
             disabled={images.length === 0}
           >
-            {showCompare ? "대조 닫기" : "이미지와 대조"}
+            {showCompare ? RESULT_PANEL.compareClose : RESULT_PANEL.compareOpen}
           </button>{" "}
           <button type="button" onClick={copy} disabled={!text}>
-            {copied ? "복사됨!" : "복사"}
+            {copied ? RESULT_PANEL.copied : RESULT_PANEL.copy}
           </button>{" "}
           <button type="button" onClick={download} disabled={!text || isStreaming}>
-            다운로드
+            {RESULT_PANEL.download}
           </button>
         </span>
       </div>
@@ -77,7 +70,7 @@ export default function ResultPanel({ text, format, isStreaming, images }: Props
           <div className="compare-images">
             {images.map((img, idx) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={img.id} src={img.previewUrl} alt={`이미지 ${idx + 1}`} />
+              <img key={img.id} src={img.previewUrl} alt={RESULT_PANEL.compareImageAlt(idx + 1)} />
             ))}
           </div>
           <pre className="result-text compare-text">{text}</pre>
