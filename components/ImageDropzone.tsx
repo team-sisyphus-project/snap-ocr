@@ -1,3 +1,16 @@
+/**
+ * Template Header
+ * Purpose: Image intake surface. Accepts images via drag-and-drop, clipboard
+ *   paste (Ctrl/Cmd+V), or file picker; validates them; renders thumbnails with
+ *   remove buttons; and offers an enlarged lightbox view.
+ * Feature Unit: Upload
+ * Customize: Accepted types and limits come from lib/validate.ts; all wording
+ *   (instructions, constraints, alt/aria labels) comes from the DROPZONE group
+ *   in lib/strings.ts.
+ * Depends on: the browser File / Clipboard / URL.createObjectURL APIs; the
+ *   validate and strings modules.
+ */
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,6 +25,7 @@ type Props = {
   onError: (message: string | null) => void;
 };
 
+/** Image intake: drag-drop / paste / picker, with validation, thumbnails, and lightbox. */
 export default function ImageDropzone({ images, onImagesChange, onError }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [enlarged, setEnlarged] = useState<SelectedImage | null>(null);
@@ -26,6 +40,7 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [enlarged]);
 
+  // Handler: append picked files, validate the combined set, and revert on error.
   const addFiles = useCallback(
     (files: File[]) => {
       const next = [
@@ -65,6 +80,7 @@ export default function ImageDropzone({ images, onImagesChange, onError }: Props
     return () => window.removeEventListener("paste", onPaste);
   }, [addFiles]);
 
+  // Handler: remove one image by id and release its object URL.
   const removeImage = (id: string) => {
     const target = images.find((i) => i.id === id);
     if (target) URL.revokeObjectURL(target.previewUrl);

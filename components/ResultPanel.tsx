@@ -1,3 +1,16 @@
+/**
+ * Template Header
+ * Purpose: Shows the extracted text (streaming or final) and its export toolbar
+ *   — copy to clipboard, download as a timestamped file, and a side-by-side
+ *   compare view against the source images.
+ * Feature Unit: Export
+ * Customize: Downloaded file extensions are mapped per format here; the download
+ *   filename timestamp comes from lib/format.ts (en-US), and all wording comes
+ *   from the RESULT_PANEL group in lib/strings.ts.
+ * Depends on: the browser Clipboard and Blob/URL APIs; the format and strings
+ *   modules.
+ */
+
 "use client";
 
 import { useState } from "react";
@@ -20,18 +33,21 @@ type Props = {
   images: SelectedImage[];
 };
 
+/** Panel that displays the extraction result with copy, download, and compare actions. */
 export default function ResultPanel({ text, format, isStreaming, images }: Props) {
   const [copied, setCopied] = useState(false);
   const [compare, setCompare] = useState(false);
 
   if (!text && !isStreaming) return null;
 
+  // Handler: copy the result text and briefly show a "Copied!" acknowledgement.
   const copy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
 
+  // Handler: download the result as a timestamped file with a per-format extension.
   const download = () => {
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);

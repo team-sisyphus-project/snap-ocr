@@ -1,3 +1,16 @@
+/**
+ * Template Header
+ * Purpose: Main screen. Composes the provider/key panel, image dropzone, format
+ *   selector, and result panel, then runs an extraction by POSTing the images to
+ *   /api/ocr and streaming the response into the result view.
+ * Feature Unit: OCR Extraction
+ * Customize: Layout and the composition of the child panels live here; all
+ *   visible wording comes from the APP/HOME/MESSAGES groups in lib/strings.ts,
+ *   and the request goes to the /api/ocr endpoint.
+ * Depends on: the /api/ocr route, the component modules under components/, and
+ *   the providers and strings modules.
+ */
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,6 +26,7 @@ import {
 } from "@/lib/providers";
 import { APP, HOME, MESSAGES } from "@/lib/strings";
 
+/** Read a File and resolve its base64 payload (without the data-URL prefix). */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -25,6 +39,7 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+/** Home page: orchestrates upload → extract → stream result across the panels. */
 export default function Home() {
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [format, setFormat] = useState<OutputFormat>("auto");
@@ -41,6 +56,7 @@ export default function Home() {
     );
   }, []);
 
+  // Handler: validate the key, POST the images to /api/ocr, and stream the reply.
   const run = async () => {
     setError(null);
 

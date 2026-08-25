@@ -1,3 +1,19 @@
+/**
+ * Template Header
+ * Purpose: OCR API route. Validates the request (provider, format, images),
+ *   dispatches to the matching server engine, and streams the extracted text
+ *   back as text/plain. Pre-stream failures become JSON error responses; a
+ *   mid-stream failure appends a notice to the body.
+ * Feature Unit: OCR Extraction
+ * Customize: The request/response contract lives here; provider engines and
+ *   their error→status mapping live in lib/ocr-engines.ts, and all user-facing
+ *   messages come from the MESSAGES group in lib/strings.ts. maxDuration bounds
+ *   how long a stream may run.
+ * Depends on: the ocr-engines, prompts, providers, validate, and strings
+ *   modules; the Node.js runtime.
+ * SECURITY: request bodies carry user API keys — never log the body or the key.
+ */
+
 import { isOutputFormat } from "@/lib/prompts";
 import { isProviderId } from "@/lib/providers";
 import { ENGINES, ProviderError, type OcrImage } from "@/lib/ocr-engines";
@@ -7,8 +23,7 @@ import { MESSAGES } from "@/lib/strings";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-// SECURITY: request bodies carry user API keys — never log the body or the key.
-
+/** Build a JSON error response with the given status and message. */
 function jsonError(status: number, message: string): Response {
   return new Response(JSON.stringify({ error: message }), {
     status,
@@ -16,6 +31,7 @@ function jsonError(status: number, message: string): Response {
   });
 }
 
+/** POST /api/ocr — validate input, dispatch to the engine, and stream the extracted text. */
 export async function POST(req: Request): Promise<Response> {
   let body: {
     images?: OcrImage[];
@@ -101,6 +117,7 @@ export async function POST(req: Request): Promise<Response> {
   });
 }
 
+/** Map a pre-stream engine failure to a JSON error response (known status, or 500). */
 function mapEngineError(err: unknown): Response {
   if (err instanceof ProviderError) {
     return jsonError(err.status, err.message);

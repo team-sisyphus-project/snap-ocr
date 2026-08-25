@@ -1,6 +1,21 @@
+/**
+ * Template Header
+ * Purpose: System-prompt builder for the OCR + text-cleanup model call. Defines
+ *   the supported output formats and assembles the instructions the provider
+ *   receives (extract every visible character, rejoin wrapped paragraphs, fix
+ *   obvious typos, keep the user's original language).
+ * Feature Unit: OCR Extraction
+ * Customize: Reword SHARED_RULES / FORMAT_RULES / USER_INSTRUCTION to change how
+ *   the model extracts and cleans up text, or add an output format to
+ *   OUTPUT_FORMATS with a matching FORMAT_RULES entry. These prompts are model
+ *   input, not Display Strings.
+ * Depends on: nothing (pure string assembly).
+ */
+
 export const OUTPUT_FORMATS = ["auto", "plain", "markdown", "csv"] as const;
 export type OutputFormat = (typeof OUTPUT_FORMATS)[number];
 
+/** Type guard: true when `v` is a supported output format (validates untrusted input). */
 export function isOutputFormat(v: unknown): v is OutputFormat {
   return typeof v === "string" && (OUTPUT_FORMATS as readonly string[]).includes(v);
 }
@@ -22,6 +37,7 @@ const FORMAT_RULES: Record<OutputFormat, string> = {
   csv: `The images contain tabular data. Output CSV only: first line is the header row, comma-separated, quote fields containing commas or newlines. If multiple tables exist, separate them with one blank line.`,
 };
 
+/** Build the full system prompt for the given output format (shared rules + format rules). */
 export function buildSystemPrompt(format: OutputFormat): string {
   return `${SHARED_RULES}\n\nOutput format:\n${FORMAT_RULES[format]}`;
 }

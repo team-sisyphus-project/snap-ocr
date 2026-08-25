@@ -1,3 +1,15 @@
+/*
+ * Template Header
+ * Purpose: Global stylesheet — base document styles and the visual rules for the
+ *   dropzone, thumbnails, lightbox, key/format panels, run button, and result
+ *   and compare views.
+ * Feature Unit: Shared
+ * Customize: Colors, spacing, radii, and shadows are the project's design
+ *   tokens; edit them here to restyle the UI. (Token values are governed by the
+ *   design system, not this text/documentation change.)
+ * Depends on: nothing.
+ */
+
 :root {
   color-scheme: light dark;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", sans-serif;

@@ -1,3 +1,15 @@
+/**
+ * Template Header
+ * Purpose: Provider picker and API-key entry. Lets the user choose a provider
+ *   and enter a key that is persisted per provider in this browser's
+ *   localStorage only — never sent anywhere except with an extraction request.
+ * Feature Unit: Shared
+ * Customize: The provider list comes from lib/providers.ts (labels, key
+ *   placeholders, storage keys); all wording comes from the API_KEY_PANEL group
+ *   in lib/strings.ts.
+ * Depends on: the browser localStorage API; the providers and strings modules.
+ */
+
 "use client";
 
 import { PROVIDER_METAS, getProviderMeta, type ProviderId } from "@/lib/providers";
@@ -10,6 +22,7 @@ type Props = {
   onApiKeyChange: (key: string) => void;
 };
 
+/** Panel for selecting a provider and entering/persisting its API key. */
 export default function ApiKeyPanel({
   provider,
   onProviderChange,
@@ -18,11 +31,13 @@ export default function ApiKeyPanel({
 }: Props) {
   const meta = getProviderMeta(provider);
 
+  // Handler: switch provider and load that provider's saved key from storage.
   const handleProviderChange = (id: ProviderId) => {
     onProviderChange(id);
     onApiKeyChange(localStorage.getItem(getProviderMeta(id).storageKey) ?? "");
   };
 
+  // Handler: update the key and mirror it into localStorage (or clear it).
   const handleKeyChange = (value: string) => {
     onApiKeyChange(value);
     if (value) {
@@ -32,6 +47,7 @@ export default function ApiKeyPanel({
     }
   };
 
+  // Handler: remove the saved key for the current provider.
   const clearKey = () => {
     localStorage.removeItem(meta.storageKey);
     onApiKeyChange("");

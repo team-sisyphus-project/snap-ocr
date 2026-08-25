@@ -1,3 +1,15 @@
+/**
+ * Template Header
+ * Purpose: Image upload validation shared by the client and the API route
+ *   (double defense): enforce image count, per-image byte size, and allowed
+ *   media types, returning a ready-to-show error message or null.
+ * Feature Unit: Upload
+ * Customize: Change MAX_IMAGES, MAX_IMAGE_BYTES, or ALLOWED_MEDIA_TYPES to adjust
+ *   upload limits. The user-facing wording lives in the VALIDATION string group
+ *   (lib/strings.ts); the numbers are injected so the two stay in sync.
+ * Depends on: the VALIDATION Display String group in lib/strings.ts.
+ */
+
 import { VALIDATION } from "@/lib/strings";
 
 export const MAX_IMAGES = 10;
@@ -18,12 +30,14 @@ export type ValidationError = {
   message: string;
 };
 
+/** Compute the decoded byte length of a base64 string without decoding it. */
 export function base64ByteLength(base64: string): number {
   if (base64.length === 0) return 0;
   const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
   return (base64.length * 3) / 4 - padding;
 }
 
+/** Validate image count, size, and media type; return the first error or null if all pass. */
 export function validateImages(images: ImageMeta[]): ValidationError | null {
   if (images.length === 0) {
     return { code: "no_images", message: VALIDATION.noImages };
