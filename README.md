@@ -52,9 +52,13 @@ npm run dev        # honors the PORT environment variable, default 3000
 npm test           # Vitest — all external APIs are mocked, no key required
 npm run build
 npm start          # honors the PORT environment variable
+npm run check         # runs both guards below; the single gate to run before shipping
 npm run check:korean   # fails if any Korean (Hangul) remains in UI Display Strings
 npm run check:locale   # fails if a UI formatting call omits an explicit locale
 ```
+
+`npm run check` runs `check:korean` and `check:locale` in sequence and exits non-zero if
+either fails, so the two static UI guards are a single gate rather than a suggestion.
 
 `npm run check:korean` statically scans the UI code paths (`app/`, `components/`, `lib/`),
 strips comments, and reports any remaining Hangul. The UI is English only, so a hit means
