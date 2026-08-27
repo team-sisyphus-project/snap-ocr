@@ -19,8 +19,9 @@ import { fileURLToPath } from "node:url";
 const UI_DIRS = ["app", "components", "lib"];
 const SCAN_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 
-// Hangul syllables + Jamo ranges.
-const HANGUL = /[ᄀ-ᇿ㄰-㆏ꥠ-꥿가-힣]/;
+// Hangul syllables + Jamo ranges (Unicode escapes keep this file itself free
+// of literal Hangul): Jamo, Compatibility Jamo, Jamo Extended-A, Syllables.
+const HANGUL = /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7A3]/;
 
 /** Remove block and line comments so translator notes don't trip the scan. */
 function stripComments(source) {

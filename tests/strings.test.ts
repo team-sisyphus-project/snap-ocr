@@ -20,8 +20,9 @@ import {
   VALIDATION,
 } from "@/lib/strings";
 
-// Matches any Hangul syllable / Jamo — used to assert the catalog is English.
-const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/;
+// Matches any Hangul syllable / Jamo (written as Unicode escapes so this file
+// itself stays free of literal Hangul) — used to assert the catalog is English.
+const HANGUL = /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7A3]/;
 
 function collectStrings(value: unknown, out: string[]): void {
   if (typeof value === "string") {

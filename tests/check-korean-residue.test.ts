@@ -4,7 +4,8 @@
  *   live code line, ignores Hangul inside a stripped comment, and reports zero
  *   offenders for clean English input — so the guard proves it can actually fail.
  * Feature Unit: Shared
- * Customize: Add cases as new Hangul residue shapes appear.
+ * Customize: Add cases as new Hangul residue shapes appear. Write Hangul
+ *   fixtures as \uXXXX escapes so this file itself stays free of literal Hangul.
  * Depends on: Vitest; the guard's exported findKoreanResidue.
  */
 
@@ -14,18 +15,18 @@ import { findKoreanResidue } from "../scripts/check-korean-residue.mjs";
 
 describe("findKoreanResidue", () => {
   it("flags Hangul in a code line", () => {
-    const hits = findKoreanResidue('const label = "업로드";');
+    const hits = findKoreanResidue('const label = "\uC5C5\uB85C\uB4DC";');
     expect(hits).toHaveLength(1);
     expect(hits[0].line).toBe(1);
-    expect(hits[0].text).toBe('const label = "업로드";');
+    expect(hits[0].text).toBe('const label = "\uC5C5\uB85C\uB4DC";');
   });
 
   it("does not flag Hangul inside a stripped line comment", () => {
-    expect(findKoreanResidue("const label = \"Upload\"; // 업로드 라벨")).toEqual([]);
+    expect(findKoreanResidue("const label = \"Upload\"; // \uC5C5\uB85C\uB4DC \uB77C\uBCA8")).toEqual([]);
   });
 
   it("does not flag Hangul inside a stripped block comment", () => {
-    expect(findKoreanResidue("/* 번역 노트: Upload */\nconst label = \"Upload\";")).toEqual([]);
+    expect(findKoreanResidue("/* \uBC88\uC5ED \uB178\uD2B8: Upload */\nconst label = \"Upload\";")).toEqual([]);
   });
 
   it("returns zero offenders for clean English input", () => {
@@ -33,7 +34,7 @@ describe("findKoreanResidue", () => {
   });
 
   it("reports the 1-based line of each offending line", () => {
-    const hits = findKoreanResidue('const a = 1;\nconst b = "취소";');
+    const hits = findKoreanResidue('const a = 1;\nconst b = "\uCDE8\uC18C";');
     expect(hits).toHaveLength(1);
     expect(hits[0].line).toBe(2);
   });

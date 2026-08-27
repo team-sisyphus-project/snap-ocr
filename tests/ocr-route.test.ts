@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// 엔진 계층 mock — 라우트는 디스패치·검증·에러 변환만 책임진다
+// Engine-layer mock — the route is responsible only for dispatch, validation, and error mapping.
 const { engineMock } = vi.hoisted(() => ({ engineMock: vi.fn() }));
 vi.mock("@/lib/ocr-engines", () => {
   class ProviderError extends Error {
@@ -87,11 +87,11 @@ describe("POST /api/ocr", () => {
   });
 
   it("streams engine output on success", async () => {
-    engineMock.mockReturnValue(yielding(["안녕", "하세요"]));
+    engineMock.mockReturnValue(yielding(["Hello, ", "world"]));
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("text/plain");
-    expect(await res.text()).toBe("안녕하세요");
+    expect(await res.text()).toBe("Hello, world");
   });
 
   it("passes apiKey, images and format to the engine", async () => {

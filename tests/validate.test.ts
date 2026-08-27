@@ -48,7 +48,8 @@ describe("validateImages", () => {
     const err = validateImages([]);
     expect(err?.message).toBeTruthy();
     expect(err?.message).toMatch(/at least one image/i);
-    expect(err?.message ?? "").not.toMatch(/[가-힣]/);
+    // Hangul-syllable range written as Unicode escapes to keep this file English-only.
+    expect(err?.message ?? "").not.toMatch(/[\uAC00-\uD7A3]/);
   });
 });
 

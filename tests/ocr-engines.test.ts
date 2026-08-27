@@ -144,12 +144,12 @@ describe("gemini engine", () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
-      body: sseBody([geminiChunk("안녕"), geminiChunk("하세요")]),
+      body: sseBody([geminiChunk("Hello, "), geminiChunk("world")]),
     });
     const text = await collect(
       ENGINES.gemini({ apiKey: "g-key", images: IMAGES, format: "auto" }),
     );
-    expect(text).toBe("안녕하세요");
+    expect(text).toBe("Hello, world");
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toContain("gemini-2.5-flash");
