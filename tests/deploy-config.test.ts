@@ -15,6 +15,10 @@ const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
 };
 
 describe("Hestia deployment configuration", () => {
+  it("enables the platform-managed PostgreSQL database", () => {
+    expect(deployConfig).toMatch(/^database\s*=\s*true\s*$/m);
+  });
+
   it("uses the root page as a healthy single-service endpoint", () => {
     expect(deployConfig).toMatch(/^healthcheck\s*=\s*"\/"\s*$/m);
   });
