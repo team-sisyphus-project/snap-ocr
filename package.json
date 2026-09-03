@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p ${PORT:-3000}",
     "build": "next build",
-    "start": "next start -p ${PORT:-3000}",
+    "start": "next start --hostname 0.0.0.0 --port \"$PORT\"",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "check": "npm run check:korean && npm run check:locale",
