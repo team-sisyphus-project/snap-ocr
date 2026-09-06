@@ -46,6 +46,26 @@ npm run dev        # honors the PORT environment variable, default 3000
   and fill in `ANTHROPIC_API_KEY`. Not needed if you enter a key in the UI.
 - No dummy accounts (this is a single-screen tool with no login).
 
+Every environment variable the app reads is listed in `.env.example`, and all of them are
+optional: with none set, the app builds, starts, serves the first screen, and answers the
+health check. Only `.env.example` (placeholders) is committed — real values live in
+`.env.local`, which is git-ignored.
+
+| Variable | Required | Effect when unset |
+|---|---|---|
+| `PORT` | no | Binds `3000`. The platform injects `PORT` in production; the app never hardcodes one. |
+| `ANTHROPIC_API_KEY` | no | Claude runs UI-key only, with no server fallback. |
+
+Check that the server is up:
+
+```bash
+curl -i http://localhost:3000/api/health   # 200 {"status":"ok","service":"snapocr"}
+```
+
+`GET /api/health` is a liveness probe for the preview/deploy platform: no I/O, no
+configuration, no cache, and — since it is unauthenticated — no configuration details in
+the body.
+
 ## Test / build / checks
 
 ```bash
@@ -88,5 +108,6 @@ common infrastructure.
 | `lib/ocr-engines.ts` | Server-only streaming engines (Claude SDK / Gemini REST SSE) + error mapping | OCR Extraction |
 | `lib/validate.ts` | Image count/size/format validation (client + server) | Upload |
 | `app/api/ocr/route.ts` | Validate → dispatch engine → stream text response | OCR Extraction |
+| `app/api/health/route.ts` | Liveness probe (`200 {"status":"ok"}`) for the platform | Shared |
 | `app/page.tsx` | Main screen that composes the panels and runs an extraction | OCR Extraction |
 | `components/` | ApiKeyPanel · ImageDropzone · FormatSelector · ResultPanel (compare view) | Upload / Export / Shared |
