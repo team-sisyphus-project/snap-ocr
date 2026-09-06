@@ -16,7 +16,7 @@
 import { formatNumber } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
-// English UI voice/tone (see design-spec recording):
+// English UI voice/tone (project design system):
 //   - Second person ("you"/"your"), sentence case.
 //   - Concise and plain; one idea per sentence.
 //   - Errors: state what happened + the next action, no blame, no jargon.
