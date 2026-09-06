@@ -35,16 +35,25 @@ transient errors (5xx) each show an English message, and you can rerun with the 
 
 ## Green-field local run
 
-No database and no seed (the app is stateless). It starts with just:
+From a clean checkout, three commands take you to the first screen:
 
 ```bash
 npm install
-npm run dev        # honors the PORT environment variable, default 3000
+npm run build
+PORT=3000 npm start     # any port; the app binds $PORT, and falls back to 3000
 ```
+
+Open `http://localhost:3000` — the upload screen is the first screen, and it needs no
+setup to appear. For iteration, `npm run dev` replaces `npm run build && npm start` and
+honors `PORT` the same way.
+
+There is **no database, no migrations, no seed, and no dummy accounts**. The app is
+stateless: images are processed in the request and never stored, and API keys stay in
+your browser (localStorage). So no data setup step exists to run or to get wrong.
 
 - Optional: to use the Claude server fallback key, copy `.env.example` to `.env.local`
   and fill in `ANTHROPIC_API_KEY`. Not needed if you enter a key in the UI.
-- No dummy accounts (this is a single-screen tool with no login).
+- No login, so there are no seeded accounts to sign in with.
 
 Every environment variable the app reads is listed in `.env.example`, and all of them are
 optional: with none set, the app builds, starts, serves the first screen, and answers the
